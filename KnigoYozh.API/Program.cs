@@ -18,9 +18,9 @@ var app = builder.Build();
 app.UseExceptionHandler();
 
 // Остальные middleware...
-app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
+//app.UseRouting();
+//app.UseAuthentication();
+////app.UseAuthorization();
+//app.MapControllers();
 
 app.Run();
