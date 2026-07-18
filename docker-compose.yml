@@ -1,6 +1,9 @@
 services:
-  knigoyozh:
-    build: .
-    ports:
-      - "8081:8080"
+  web:
+    image: ghcr.io/your_github_username/knigo-yozh:latest
+    container_name: knigo_yozh_app
     restart: always
+    ports:
+      - "8081:80"
+    env_file:
+      - .env
