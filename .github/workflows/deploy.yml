@@ -39,4 +39,4 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/app/knigoyozh
-            docker compose up -d --build
+            sudo docker compose up -d --build
