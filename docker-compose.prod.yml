@@ -1,9 +1,47 @@
+version: '3.8'
+
 services:
-  web:
-    image: ghcr.io/your_github_username/knigo-yozh:latest
-    container_name: knigo_yozh_app
-    restart: always
-    ports:
-      - "8081:80"
+  db:
+    image: postgres:16-alpine
+    container_name: knigoyozh-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - knigoyozh-network
+
+  api:
+    image: ghcr.io/datybaka/knigoyozh-api:latest
+    container_name: knigoyozh-api
+    restart: unless-stopped
     env_file:
       - .env
+    depends_on:
+      - db
+    networks:
+      - knigoyozh-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: knigoyozh-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    networks:
+      - knigoyozh-network
+
+networks:
+  knigoyozh-network:
+    driver: bridge
+
+volumes:
+  pgdata:
