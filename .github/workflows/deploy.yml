@@ -50,12 +50,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Debug Secrets Visibility
-        run: |
-          if [ -z "${{ secrets.SERVER_HOST }}" ]; then echo "❌ SERVER_HOST пуст"; else echo "✅ SERVER_HOST найден"; fi
-          if [ -z "${{ secrets.SERVER_USER }}" ]; then echo "❌ SERVER_USER пуст"; else echo "✅ SERVER_USER найден"; fi
-          if [ -z "${{ secrets.SERVER_SSH_KEY }}" ]; then echo "❌ SERVER_SSH_KEY пуст"; else echo "✅ SERVER_SSH_KEY найден"; fi
-
       - name: Copy deployment files via SCP
         uses: appleboy/scp-action@v0.1.7
         with:

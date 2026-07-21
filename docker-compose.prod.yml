@@ -15,7 +15,7 @@ services:
       - knigoyozh-network
 
   api:
-    image: ghcr.io/datybaka/knigoyozh-api:latest
+    image: ghcr.io/datybaka/knigo-yozh-api:latest
     container_name: knigoyozh-api
     restart: unless-stopped
     env_file:
