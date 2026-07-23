@@ -42,8 +42,9 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             FluentValidation.ValidationException => StatusCodes.Status400BadRequest,
             DomainValidationException => StatusCodes.Status400BadRequest,
             IValidationException => StatusCodes.Status422UnprocessableEntity,
+            AuthenticationException => StatusCodes.Status401Unauthorized,   // новое
             INotFoundException => StatusCodes.Status404NotFound,
-            InvalidOperationException => StatusCodes.Status409Conflict, // Например, Email/Username занят
+            InvalidOperationException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status500InternalServerError
         };
 
@@ -52,7 +53,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         // 3. Формируем ProblemDetails
         ProblemDetails problemDetails = exception switch
         {
-            // А) Ошибки входных данных (FluentValidation)
+            // Ошибки входных данных (FluentValidation)
             FluentValidation.ValidationException fluentEx => new ValidationProblemDetails(
                 fluentEx.Errors
                     .GroupBy(e => e.PropertyName)
@@ -63,7 +64,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 Status = statusCode
             },
 
-            // Б) Ошибки валидации внутри Домена (User.cs)
+            // Ошибки валидации внутри Домена (User.cs)
             DomainValidationException domainValEx => new ValidationProblemDetails((IDictionary<string, string[]>)domainValEx.Errors)
             {
                 Title = "Ошибка доменной валидации",
@@ -71,7 +72,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 Status = statusCode
             },
 
-            // В) Кастомные IValidationException
+            // Кастомные IValidationException
             IValidationException validationException => new ValidationProblemDetails(
                 (IDictionary<string, string[]>)validationException.Errors)
             {
@@ -79,8 +80,15 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 Detail = validationException.Message,
                 Status = statusCode
             },
+            // Ошибки аутентификации (неверный логин/пароль)
+            AuthenticationException authEx => new ProblemDetails
+            {
+                Title = "Authentication Failed",
+                Detail = authEx.Message,
+                Status = statusCode
+            },
 
-            // Г) Ресурс не найден
+            // Ресурс не найден
             INotFoundException notFoundException => new ProblemDetails
             {
                 Title = "Resource Not Found",
@@ -88,7 +96,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 Status = statusCode
             },
 
-            // Д) Бизнес-конфликты (Дубликаты сущностей)
+            // Бизнес-конфликты (Дубликаты сущностей)
             InvalidOperationException invalidOpEx => new ProblemDetails
             {
                 Title = "Conflict",
@@ -96,7 +104,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 Status = statusCode
             },
 
-            // Е) Непредвиденные системные ошибки
+            // Непредвиденные системные ошибки
             _ => new ProblemDetails
             {
                 Title = "Internal Server Error",
@@ -119,5 +127,6 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             or IValidationException
             or FluentValidation.ValidationException
             or DomainValidationException
-            or InvalidOperationException;
+            or InvalidOperationException
+            or AuthenticationException;
 }

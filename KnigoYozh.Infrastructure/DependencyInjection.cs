@@ -1,10 +1,10 @@
 ﻿using KnigoYozh.Application.Interfaces;
+using KnigoYozh.Infrastructure.Authentication;
 using KnigoYozh.Infrastructure.Persistence;
-using KnigoYozh.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
+using Microsoft.Extensions.Options;
 
 namespace KnigoYozh.Infrastructure;
 
@@ -27,6 +27,9 @@ public static class DependencyInjection
         services.AddScoped<IKnigoYozhDbContext, KnigoYozhDbContext>();
 
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
+
+        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         return services;
     }

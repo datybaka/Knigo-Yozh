@@ -1,7 +1,7 @@
 ﻿using Isopoh.Cryptography.Argon2;
 using KnigoYozh.Application.Interfaces;
 
-namespace KnigoYozh.Infrastructure.Services;
+namespace KnigoYozh.Infrastructure.Authentication;
 
 public sealed class PasswordHasher : IPasswordHasher
 {
