@@ -1,7 +1,10 @@
-﻿using KnigoYozh.Infrastructure.Persistence;
+﻿using KnigoYozh.Application.Interfaces;
+using KnigoYozh.Infrastructure.Persistence;
+using KnigoYozh.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace KnigoYozh.Infrastructure;
 
@@ -17,10 +20,13 @@ public static class DependencyInjection
         {
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
-                // Указываем сборку с миграциями (где живет AppDbContext)
                 npgsqlOptions.MigrationsAssembly(typeof(KnigoYozhDbContext).Assembly.FullName);
             });
         });
+
+        services.AddScoped<IKnigoYozhDbContext, KnigoYozhDbContext>();
+
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
         return services;
     }

@@ -1,9 +1,10 @@
-﻿using KnigoYozh.Domain.Entities;
+﻿using KnigoYozh.Application.Interfaces;
+using KnigoYozh.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace KnigoYozh.Infrastructure.Persistence;
 
-public class KnigoYozhDbContext : DbContext
+public class KnigoYozhDbContext : DbContext, IKnigoYozhDbContext
 {
     public DbSet<User> Users => Set<User>();
 
