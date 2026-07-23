@@ -83,6 +83,6 @@ app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers(); // Маппим контроллеры
+app.MapControllers();
 
 app.Run();
