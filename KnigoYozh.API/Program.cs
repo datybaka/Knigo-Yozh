@@ -1,13 +1,16 @@
-using DotNetEnv;
 using KnigoYozh.Api.Infrastructure;
 using KnigoYozh.Api.Services;
 using KnigoYozh.Application;
 using KnigoYozh.Application.Interfaces;
 using KnigoYozh.Infrastructure;
 using KnigoYozh.Infrastructure.Authentication;
+using KnigoYozh.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 using System.Text;
+using DotNetEnv;
+
 
 // 1. Загрузка .env (безопасная для Docker/CI/CD)
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
@@ -61,6 +64,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<KnigoYozhDbContext>();
+    dbContext.Database.Migrate();
+}
 
 // 4. Настройка HTTP Pipeline
 if (app.Environment.IsDevelopment())
