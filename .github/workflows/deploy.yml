@@ -69,8 +69,7 @@ jobs:
           target: "/home/app/knigoyozh"
           source: "docker-compose.prod.yml,frontend/,nginx/"
           rm: false
-
-- name: Deploy via SSH
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
