@@ -42,6 +42,15 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+      - name: Build and push Nginx image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          # Указываем, что использовать нужно конкретный Dockerfile
+          file: ./nginx/Dockerfile
+          push: true
+          # Тег будет отличаться (-nginx в конце)
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/knigo-yozh-nginx:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -61,26 +70,34 @@ jobs:
           source: "docker-compose.prod.yml,frontend/,nginx/"
           rm: false
 
-      - name: Deploy via SSH
+- name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
-          port: 22
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            mkdir -p /home/app/knigoyozh
             cd /home/app/knigoyozh
-
-            # Safe .env generation
-            cat << 'EOF' > .env
-            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            GHCR_USER=${{ github.repository_owner }}
-            EOF
-
-            # Container orchestration
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
-            docker image prune -f
+            
+            # 1. Генерируем .env файл с нуля при каждом деплое
+            echo "POSTGRES_DB=knigoyozh_db" > .env
+            echo "POSTGRES_USER=postgres" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            
+            # ConnectionString собираем из переменных
+            echo "ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=knigoyozh_db;Username=postgres;Password=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            
+            # JWT настройки
+            echo "Jwt__Secret=${{ secrets.JWT_SECRET }}" >> .env
+            echo "Jwt__Issuer=KnigoYozh" >> .env
+            echo "Jwt__Audience=KnigoYozh" >> .env
+            echo "Jwt__ExpirationMinutes=60" >> .env
+            
+            # 2. Авторизуемся в GHCR и пуллим образы
+            echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            sudo docker compose -f docker-compose.prod.yml pull
+            sudo docker compose -f docker-compose.prod.yml up -d
+            
+            sudo docker image prune -f

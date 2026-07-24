@@ -67,8 +67,21 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<KnigoYozhDbContext>();
-    dbContext.Database.Migrate();
+    var services = scope.ServiceProvider;
+    try
+    {
+        var dbContext = services.GetRequiredService<KnigoYozhDbContext>();
+        // Если БД в Докере стартует медленнее, чем API, приложение не упадет сразу,
+        // а попытается применить миграции, когда БД будет доступна (потребуются настройки retry в EF).
+        dbContext.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Произошла ошибка при применении миграций к базе данных.");
+        // Можно пробросить throw дальше, если старт без БД не имеет смысла
+        throw;
+    }
 }
 
 // 4. Настройка HTTP Pipeline
@@ -77,6 +90,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseDefaultFiles(); // Заставит Kestrel искать index.html по умолчанию
+app.UseStaticFiles();  // Разрешит раздачу статических файлов из wwwroot
 
 app.UseExceptionHandler();
 

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="autumn">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>КнигоЁж</title>
+    <!-- Tailwind + DaisyUI CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glow-card {
+            box-shadow: 0 0 25px rgba(251, 146, 60, 0.3);
+        }
+        .glow-card:hover {
+            box-shadow: 0 0 35px rgba(251, 146, 60, 0.5);
+            transition: box-shadow 0.3s ease;
+        }
+        .btn-glow {
+            box-shadow: 0 0 15px rgba(251, 146, 60, 0.4);
+            transition: box-shadow 0.3s ease, transform 0.2s ease;
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 25px rgba(251, 146, 60, 0.7);
+            transform: translateY(-2px);
+        }
+        body {
+            background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+            background-attachment: fixed;
+        }
+        .app-container {
+            position: relative;
+            z-index: 1;
+        }
+        .error-message {
+            color: #dc2626; /* red-600 */
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 font-sans antialiased">
+    <div id="app" class="app-container w-full max-w-md"></div>
+
+    <script>
+        // Простенький роутер состояний
+        const AppState = {
+            current: 'login', // 'login' | 'register' | 'profile'
+            token: localStorage.getItem('jwt_token') || null,
+        };
+
+        // Рендеринг экрана логина
+        function renderLogin() {
+            AppState.current = 'login';
+            const html = `
+                <div class="card glow-card bg-stone-100 shadow-2xl rounded-2xl p-8">
+                    <h1 class="text-4xl font-bold text-center text-red-800 mb-2">КнигоЁж</h1>
+                    <p class="text-center text-stone-500 mb-6">Уютное чтение</p>
+                    <form id="login-form" class="space-y-5">
+                        <div class="form-control">
+                            <label class="label text-stone-600" for="login-email">Email</label>
+                            <input type="email" id="login-email" class="input input-bordered rounded-xl bg-stone-50 border-stone-300 focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="bookworm@example.com" required />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-stone-600" for="login-password">Пароль</label>
+                            <input type="password" id="login-password" class="input input-bordered rounded-xl bg-stone-50 border-stone-300 focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="••••••••" required />
+                        </div>
+                        <div id="login-error" class="error-message hidden"></div>
+                        <button type="submit" class="btn btn-warning w-full rounded-xl btn-glow text-stone-900 font-semibold">
+                            Войти
+                        </button>
+                    </form>
+                    <p class="text-center text-stone-500 mt-4">
+                        Нет аккаунта? <a href="#" id="to-register" class="text-orange-500 hover:text-orange-600 underline">Зарегистрироваться</a>
+                    </p>
+                </div>
+            `;
+            document.getElementById('app').innerHTML = html;
+
+            // Обработчики
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            document.getElementById('to-register').addEventListener('click', (e) => {
+                e.preventDefault();
+                renderRegister();
+            });
+        }
+
+        // Рендеринг экрана регистрации
+        function renderRegister() {
+            AppState.current = 'register';
+            const html = `
+                <div class="card glow-card bg-stone-100 shadow-2xl rounded-2xl p-8">
+                    <h1 class="text-4xl font-bold text-center text-red-800 mb-2">КнигоЁж</h1>
+                    <p class="text-center text-stone-500 mb-6">Новое гнездо</p>
+                    <form id="register-form" class="space-y-5">
+                        <div class="form-control">
+                            <label class="label text-stone-600" for="reg-email">Email</label>
+                            <input type="email" id="reg-email" class="input input-bordered rounded-xl bg-stone-50 border-stone-300 focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="bookworm@example.com" required />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-stone-600" for="reg-username">Имя пользователя</label>
+                            <input type="text" id="reg-username" class="input input-bordered rounded-xl bg-stone-50 border-stone-300 focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="Ёжик" required />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-stone-600" for="reg-password">Пароль</label>
+                            <input type="password" id="reg-password" class="input input-bordered rounded-xl bg-stone-50 border-stone-300 focus:border-orange-400 focus:ring-1 focus:ring-orange-400" placeholder="••••••••" required />
+                        </div>
+                        <div id="register-error" class="error-message hidden"></div>
+                        <button type="submit" class="btn btn-warning w-full rounded-xl btn-glow text-stone-900 font-semibold">
+                            Зарегистрироваться
+                        </button>
+                    </form>
+                    <p class="text-center text-stone-500 mt-4">
+                        Уже есть аккаунт? <a href="#" id="to-login" class="text-orange-500 hover:text-orange-600 underline">Войти</a>
+                    </p>
+                </div>
+            `;
+            document.getElementById('app').innerHTML = html;
+
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+            document.getElementById('to-login').addEventListener('click', (e) => {
+                e.preventDefault();
+                renderLogin();
+            });
+        }
+
+        // Функция отображения ошибки в форме
+        function showError(formId, errorId, message) {
+            const errorDiv = document.getElementById(errorId);
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // Логин
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const response = await fetch('/api/users/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) {
+                    const problem = await response.json();
+                    throw new Error(problem.detail || 'Ошибка входа');
+                }
+
+                const data = await response.json();
+                localStorage.setItem('jwt_token', data.token);
+                AppState.token = data.token;
+                renderProfile(data); // пока заглушка, добавим на следующем шаге
+            } catch (err) {
+                showError('login-form', 'login-error', err.message);
+            }
+        }
+
+        // Регистрация
+        async function handleRegister(e) {
+            e.preventDefault();
+            const email = document.getElementById('reg-email').value.trim();
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                const response = await fetch('/api/users/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        username,
+                        password,
+                        role: 0  // User
+                    })
+                });
+
+                if (!response.ok) {
+                    const problem = await response.json();
+                    throw new Error(problem.detail || 'Ошибка регистрации');
+                }
+
+                // После успешной регистрации переключаем на логин
+                renderLogin();
+            } catch (err) {
+                showError('register-form', 'register-error', err.message);
+            }
+        }
+
+        // Заглушка профиля (будет заменена позже)
+        function renderProfile(loginResponse) {
+            AppState.current = 'profile';
+            const html = `
+                <div class="card glow-card bg-stone-100 shadow-2xl rounded-2xl p-8 text-center">
+                    <h2 class="text-2xl font-bold text-red-800 mb-2">Добро пожаловать, ${loginResponse.username}!</h2>
+                    <p class="text-stone-600">Скоро здесь будет полный профиль.</p>
+                    <button id="logout-btn" class="btn btn-outline btn-error mt-6 rounded-xl">Выйти</button>
+                </div>
+            `;
+            document.getElementById('app').innerHTML = html;
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('jwt_token');
+                AppState.token = null;
+                renderLogin();
+            });
+        }
+
+        // Инициализация
+        if (AppState.token) {
+            // Пользователь уже залогинен – покажем профиль, но пока заглушка
+            // Запросим /api/users/me для проверки токена и получения данных
+            fetch('/api/users/me', {
+                headers: { 'Authorization': `Bearer ${AppState.token}` }
+            })
+            .then(res => {
+                if (!res.ok) {
+                    localStorage.removeItem('jwt_token');
+                    AppState.token = null;
+                    renderLogin();
+                } else {
+                    return res.json();
+                }
+            })
+            .then(user => {
+                if (user) renderProfile({ username: user.username, token: AppState.token });
+            })
+            .catch(() => {
+                localStorage.removeItem('jwt_token');
+                AppState.token = null;
+                renderLogin();
+            });
+        } else {
+            renderLogin();
+        }
+    </script>
+</body>
+</html>
